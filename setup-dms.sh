@@ -12,11 +12,19 @@ fi
 sudo pacman -Syu --noconfirm
 
 # 2. Install Hyprland, Ghostty, and basic tools
-# Added dgop and power-profiles-daemon as requested
-sudo pacman -S --noconfirm hyprland ghostty waybar wofi mako swaybg swayidle swaylock brightnessctl playerctl wl-clipboard qt6-multimedia qt6-wayland fastfetch dgop power-profiles-daemon
+# Added audio (pipewire + firmware), polkit, fprintd, i2c-tools, and accountsservice
+sudo pacman -S --noconfirm \
+    hyprland ghostty waybar wofi mako swaybg brightnessctl playerctl wl-clipboard \
+    qt6-multimedia qt6-wayland fastfetch dgop power-profiles-daemon \
+    pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
+    sof-firmware alsa-firmware alsa-utils \
+    polkit accountsservice fprintd i2c-tools hypridle hyprlock wayland-protocols
 
 # Enable power-profiles-daemon
 sudo systemctl enable --now power-profiles-daemon.service
+
+# Setup I2C for monitor brightness control
+sudo usermod -aG i2c $USER
 
 # 3. Install AUR helper (yay)
 if ! command -v yay &> /dev/null; then
