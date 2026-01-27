@@ -158,6 +158,10 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 # 6. Chroot configuration
 gum spin --title "Configuring system..." -- sleep 1
+
+# Pre-calculate PARTUUID to avoid blkid issues inside chroot
+PARTUUID_ROOT=$(blkid -s PARTUUID -o value "$PART_ROOT")
+
 arch-chroot /mnt /bin/bash <<EOF
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 hwclock --systohc
@@ -170,9 +174,7 @@ echo "::1       localhost" >> /etc/hosts
 echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >> /etc/hosts
 
 # Root and User setup
-echo "root:$ROOT_PASSWORD" | chpasswd
 useradd -m -G wheel "$USERNAME"
-echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
 # Bootloader
@@ -183,7 +185,7 @@ echo "timeout 3" >> /boot/loader/loader.conf
 echo "title Arch Linux" > /boot/loader/entries/arch.conf
 echo "linux /vmlinuz-linux" >> /boot/loader/entries/arch.conf
 echo "initrd /initramfs-linux.img" >> /boot/loader/entries/arch.conf
-echo "options root=PARTUUID=\$(blkid -s PARTUUID -o value $PART_ROOT) rw" >> /boot/loader/entries/arch.conf
+echo "options root=PARTUUID=$PARTUUID_ROOT rw" >> /boot/loader/entries/arch.conf
 
 # ENABLE NETWORKMANAGER
 systemctl enable NetworkManager
@@ -195,8 +197,12 @@ if [[ "$GRAPHICS_DRIVER_CHOICE" == *"Nvidia"* ]]; then
     # Add nvidia_drm.modeset=1 for Wayland support
     sed -i '/options root=/ s/$/ nvidia_drm.modeset=1/' /boot/loader/entries/arch.conf
 fi
-
 EOF
 
+# Use printf to securely set passwords (avoids shell expansion/interpretation issues)
+printf "root:%s" "$ROOT_PASSWORD" | arch-chroot /mnt chpasswd
+printf "%s:%s" "$USERNAME" "$PASSWORD" | arch-chroot /mnt chpasswd
+
+sync
 umount -R /mnt
 header "Arch Linux installed successfully! Please reboot."
