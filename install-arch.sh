@@ -3,6 +3,11 @@
 # Improved Arch Linux Installation Script with Gum UI
 set -e
 
+# Setup logging for debugging
+LOG_FILE="/tmp/arch-install.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "=== Arch Linux Installation Started at $(date) ===" >> "$LOG_FILE"
+
 # Ensure gum is installed for the UI
 if ! command -v gum &> /dev/null; then
     echo "Installing gum for the UI..."
@@ -29,6 +34,17 @@ if [[ -z "$DISK" ]]; then
     exit 1
 fi
 gum style --foreground 46 "Selected Disk: $DISK"
+
+# Check if disk has existing partitions
+EXISTING_PARTITIONS=$(lsblk -n "$DISK" | wc -l)
+if [ "$EXISTING_PARTITIONS" -gt 1 ]; then
+    gum style --foreground 214 "⚠️  WARNING: Disk $DISK contains existing partitions!"
+    lsblk "$DISK"
+    if ! gum confirm --default=false "This will ERASE ALL DATA on $DISK. Are you sure?"; then
+        gum style --foreground 196 "Installation aborted."
+        exit 0
+    fi
+fi
 
 # 2. Hostname
 gum style --foreground 99 "Enter hostname:"
@@ -61,7 +77,39 @@ if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
     exit 1
 fi
 
-# 5. Swap Size
+# 5. Timezone Selection
+gum style --foreground 99 "Select your timezone:"
+TIMEZONE=$(gum choose \
+    "America/Sao_Paulo" \
+    "America/Fortaleza" \
+    "America/Recife" \
+    "America/Bahia" \
+    "America/Manaus" \
+    "America/Belem" \
+    "America/Cuiaba" \
+    "America/Porto_Velho" \
+    "America/Rio_Branco" \
+    "America/New_York" \
+    "America/Los_Angeles" \
+    "Europe/London" \
+    "Europe/Lisbon" \
+    "UTC")
+TIMEZONE=${TIMEZONE:-America/Sao_Paulo}
+gum style --foreground 46 "Selected Timezone: $TIMEZONE"
+
+# 6. Locale Selection
+gum style --foreground 99 "Select your system language:"
+LOCALE=$(gum choose \
+    "pt_BR.UTF-8 (Português Brasil)" \
+    "en_US.UTF-8 (English US)" \
+    "es_ES.UTF-8 (Español)" \
+    "pt_PT.UTF-8 (Português Portugal)")
+LOCALE=${LOCALE:-pt_BR.UTF-8 (Português Brasil)}
+# Extract just the locale code
+LOCALE_CODE=$(echo "$LOCALE" | awk '{print $1}')
+gum style --foreground 46 "Selected Locale: $LOCALE_CODE"
+
+# 7. Swap Size
 # Get total RAM in GiB
 RAM_GIB=$(free -g | awk '/^Mem:/{print $2}')
 # Recommend 1x or 2x RAM depending on size. 4G is usually safe for small VMs.
@@ -71,6 +119,14 @@ if [ "$RECOMMENDED_SWAP" -eq 0 ]; then RECOMMENDED_SWAP=2; fi
 gum style --foreground 99 "Enter swap size in GiB:"
 SWAP_SIZE=$(gum input --placeholder "$RECOMMENDED_SWAP" --value "$RECOMMENDED_SWAP")
 SWAP_SIZE=${SWAP_SIZE:-$RECOMMENDED_SWAP}
+
+# 8. Filesystem Selection
+gum style --foreground 99 "Select root filesystem:"
+FILESYSTEM=$(gum choose "ext4 (Traditional, stable)" "btrfs (Modern, snapshots support)")
+FILESYSTEM=${FILESYSTEM:-ext4 (Traditional, stable)}
+# Extract just the filesystem type
+FS_TYPE=$(echo "$FILESYSTEM" | awk '{print $1}')
+gum style --foreground 46 "Selected Filesystem: $FS_TYPE"
 
 # 6. Graphics Driver Selection
 gum style --foreground 99 "Select Graphics Driver:"
@@ -100,11 +156,14 @@ esac
 
 gum style --border normal --margin "1" --padding "1" \
 "Configuration Summary:" \
-"Disk:      $DISK" \
-"Hostname:  $HOSTNAME" \
-"Username:  $USERNAME" \
-"Swap:      ${SWAP_SIZE}G" \
-"Graphics:  $GRAPHICS_DRIVER_CHOICE ($GRAPHICS_PACKAGES)"
+"Disk:       $DISK" \
+"Hostname:   $HOSTNAME" \
+"Username:   $USERNAME" \
+"Timezone:   $TIMEZONE" \
+"Locale:     $LOCALE_CODE" \
+"Filesystem: $FS_TYPE" \
+"Swap:       ${SWAP_SIZE}G" \
+"Graphics:   $GRAPHICS_DRIVER_CHOICE"
 
 if ! gum confirm "Proceed with installation?"; then
     gum style --foreground 196 "Installation aborted."
@@ -136,20 +195,41 @@ gum spin --title "Formatting filesystems..." -- sleep 2
 mkfs.fat -F32 "$PART_EFI"
 mkswap "$PART_SWAP"
 swapon "$PART_SWAP"
-mkfs.ext4 "$PART_ROOT"
 
-# 3. Mount
-gum spin --title "Mounting partitions..." -- sleep 1
-# Ensure /mnt is clean
-umount -R /mnt 2>/dev/null || true
-mount "$PART_ROOT" /mnt
+# Format root partition based on filesystem choice
+if [ "$FS_TYPE" == "btrfs" ]; then
+    mkfs.btrfs -f "$PART_ROOT"
+    
+    # Mount and create subvolumes
+    mount "$PART_ROOT" /mnt
+    btrfs subvolume create /mnt/@
+    btrfs subvolume create /mnt/@home
+    umount /mnt
+    
+    # Mount with subvolumes
+    mount -o subvol=@,compress=zstd,noatime "$PART_ROOT" /mnt
+    mkdir -p /mnt/home
+    mount -o subvol=@home,compress=zstd,noatime "$PART_ROOT" /mnt/home
+else
+    mkfs.ext4 "$PART_ROOT"
+    mount "$PART_ROOT" /mnt
+fi
+
+# 3. Mount EFI
 mkdir -p /mnt/boot
 # MOUNT WITH UMASK=0077 TO FIX SECURITY HOLE WARNING
 mount -o fmask=0077,dmask=0077 "$PART_EFI" /mnt/boot
 
 # 4. Install Base
 # Add graphics packages to installation
-PACKAGES="base linux linux-firmware base-devel networkmanager sudo git vi nano $GRAPHICS_PACKAGES"
+# Build dependencies for programming languages (Node.js, Erlang, Elixir, Go, Rust, Ruby)
+BUILD_PACKAGES="less clang openssl zlib readline ncurses libffi libyaml libxslt autoconf automake bison unixodbc wxwidgets fop"
+# Add btrfs-progs if using BTRFS
+BTRFS_PACKAGES=""
+if [ "$FS_TYPE" == "btrfs" ]; then
+    BTRFS_PACKAGES="btrfs-progs"
+fi
+PACKAGES="base linux linux-firmware base-devel networkmanager sudo git vi nano $GRAPHICS_PACKAGES $BUILD_PACKAGES $BTRFS_PACKAGES"
 gum spin --title "Installing core packages (this may take a while)..." -- pacstrap /mnt $PACKAGES
 
 # 5. Generate fstab
@@ -163,12 +243,12 @@ gum spin --title "Configuring system..." -- sleep 1
 PARTUUID_ROOT=$(blkid -s PARTUUID -o value "$PART_ROOT")
 
 arch-chroot /mnt /bin/bash <<EOF
-ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
-echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen
+echo "$LOCALE_CODE UTF-8" >> /etc/locale.gen
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
-echo "LANG=pt_BR.UTF-8" > /etc/locale.conf
+echo "LANG=$LOCALE_CODE" > /etc/locale.conf
 echo "$HOSTNAME" > /etc/hostname
 echo "127.0.0.1 localhost" >> /etc/hosts
 echo "::1       localhost" >> /etc/hosts

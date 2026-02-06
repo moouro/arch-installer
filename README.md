@@ -3,16 +3,24 @@
 Interactive scripts for installing Arch Linux on **Hardware or VMs** and setting up a modern Hyprland environment with **Dank Material Shell (DMS)**.
 
 ## Features
-- **Gum TUI**: A beautiful terminal interface for configuration via `gum`.
-- **Driver Support**: Built-in support for Intel (Arc/Integrated), AMD (Radeon), Nvidia (Proprietary/Open/DKMS), and VM (VirtIO) graphics.
-- **Hardware & VM Compatible**: Handles NVMe/SATA partitioning and bootloader setup automatically.
-- **Modern Desktop**: Installs Hyprland with the Material Design 3 inspired Dank Material Shell.
-- **Full Tooling**:
-    - `power-profiles-daemon` for power management.
-    - `dsearch` and `dgop` for shell features.
-    - `khal` for calendar.
-    - `Ghostty` as the default terminal.
-    - `yay` as AUR helper.
+
+### 🖥️ Base Installation (`install-arch.sh`)
+- **Gum TUI**: Beautiful terminal interface for configuration
+- **Interactive Setup**: Choose timezone, locale, filesystem, and graphics driver
+- **Filesystem Options**: ext4 (stable) or BTRFS (with snapshots support)
+- **Driver Support**: Intel, AMD, Nvidia (Proprietary/Open/DKMS), and VM (VirtIO)
+- **Disk Validation**: Warning before erasing disks with existing data
+- **Build Dependencies**: Pre-installed packages for Node.js, Erlang, Elixir, Go, Rust, Ruby
+- **Installation Logs**: Saved to `/tmp/arch-install.log` for debugging
+
+### 🎨 Desktop Setup (`setup-dms.sh`)
+- **Hyprland**: Modern Wayland tiling compositor
+- **DMS Shell**: Material Design 3 inspired desktop shell
+- **US International Keyboard**: Pre-configured for accents
+- **Nerd Fonts**: JetBrainsMono for terminal icons
+- **Bluetooth**: Optional support (prompted during setup)
+- **Optional Apps**: Choose from Firefox, VS Code, Discord, Spotify, Telegram, Thunar, VLC
+- **Config Backup**: Automatic backup of existing configs
 
 ## How to Use
 
@@ -34,9 +42,17 @@ chmod +x setup-dms.sh
 
 ## Shortcuts
 - `SUPER + ENTER`: Open Ghostty terminal
-- `SUPER + Q`: Close active window (killactive)
+- `SUPER + Q`: Close active window
 
 ## Included Packages
+
+### Base Installation
+- **Core**: `base`, `linux`, `linux-firmware`, `base-devel`, `networkmanager`
+- **Graphics**: Auto-configured (Mesa, Nvidia, etc.)
+- **Dev Tools**: `openssl`, `zlib`, `readline`, `ncurses`, `libffi`, `libyaml`, `autoconf`, `automake`, `bison`
+
+### Desktop Setup
 - **Shell**: Dank Material Shell, DMS Greeter (via `greetd`)
 - **Utilities**: `dsearch`, `dgop`, `khal`, `power-profiles-daemon`, `cliphist`, `cava`, `matugen`
-- **Graphics**: Auto-configured based on your hardware selection (Mesa, Nvidia, etc.).
+- **Audio**: Pipewire (pulse, alsa, jack) + Wireplumber
+- **Fonts**: JetBrainsMono Nerd Font

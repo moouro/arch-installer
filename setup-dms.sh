@@ -44,6 +44,48 @@ echo "Installing Dank Material Shell, DMS Greeter, and dependencies..."
 # Removed dgop-bin in favor of pacman dgop. Added khal.
 yay -S --noconfirm dms-shell-bin greetd-dms-greeter-git cava cliphist dsearch-bin matugen-bin khal
 
+# 4.1 Install Nerd Fonts for terminal icons
+echo "Installing Nerd Fonts (JetBrainsMono)..."
+yay -S --noconfirm ttf-jetbrains-mono-nerd
+
+# 4.2 Optional: Bluetooth support
+if command -v gum &> /dev/null; then
+    if gum confirm "Install Bluetooth support?"; then
+        echo "Installing Bluetooth packages..."
+        sudo pacman -S --noconfirm bluez bluez-utils blueman
+        sudo systemctl enable --now bluetooth.service
+    fi
+else
+    echo "Installing Bluetooth packages..."
+    sudo pacman -S --noconfirm bluez bluez-utils blueman
+    sudo systemctl enable --now bluetooth.service
+fi
+
+# 4.3 Optional: Additional applications
+if command -v gum &> /dev/null; then
+    echo "Select optional applications to install (SPACE to select, ENTER to confirm):"
+    SELECTED_APPS=$(gum choose --no-limit \
+        "firefox (Web Browser)" \
+        "code (Visual Studio Code)" \
+        "discord (Chat App)" \
+        "spotify-launcher (Music)" \
+        "telegram-desktop (Messaging)" \
+        "thunar (File Manager)" \
+        "vlc (Media Player)")
+    
+    if [ -n "$SELECTED_APPS" ]; then
+        # Extract package names (first word before space)
+        APPS_TO_INSTALL=""
+        while IFS= read -r line; do
+            PKG=$(echo "$line" | awk '{print $1}')
+            APPS_TO_INSTALL="$APPS_TO_INSTALL $PKG"
+        done <<< "$SELECTED_APPS"
+        
+        echo "Installing selected apps:$APPS_TO_INSTALL"
+        yay -S --noconfirm $APPS_TO_INSTALL
+    fi
+fi
+
 # Enable dsearch user service
 systemctl --user enable --now dsearch
 
@@ -65,11 +107,25 @@ fi
 
 # 6. Basic Hyprland config for DMS
 echo "Configuring Hyprland shortcuts..."
+
+# Backup existing configs if they exist
+if [ -d ~/.config/hypr ] && [ -f ~/.config/hypr/hyprland.conf ]; then
+    BACKUP_DIR=~/.config/hypr.backup.$(date +%Y%m%d_%H%M%S)
+    echo "Backing up existing Hyprland config to $BACKUP_DIR..."
+    cp -r ~/.config/hypr "$BACKUP_DIR"
+fi
+
 mkdir -p ~/.config/hypr
 if [ ! -f ~/.config/hypr/hyprland.conf ]; then
     cat <<EOF > ~/.config/hypr/hyprland.conf
 # Hyprland Config for DMS
 exec-once = dms run
+
+# Keyboard Layout (US International for accents)
+input {
+    kb_layout = us
+    kb_variant = intl
+}
 
 # Shortcuts
 bind = SUPER, RETURN, exec, ghostty
