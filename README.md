@@ -1,58 +1,68 @@
 # Arch Linux Installer & DMS Setup
 
-Interactive scripts for installing Arch Linux on **Hardware or VMs** and setting up a modern Hyprland environment with **Dank Material Shell (DMS)**.
+Scripts interativos para instalar o Arch Linux em **Hardware ou VMs** e configurar um ambiente moderno com Hyprland e **Dank Material Shell (DMS)**.
 
-## Features
+> 🙏 **Créditos**: Este projeto é um fork de [r3dg0d/arch-installer](https://github.com/r3dg0d/arch-installer). Obrigado ao autor original pela base do projeto!
 
-### 🖥️ Base Installation (`install-arch.sh`)
-- **Gum TUI**: Beautiful terminal interface for configuration
-- **Interactive Setup**: Choose timezone, locale, filesystem, and graphics driver
-- **Filesystem Options**: ext4 (stable) or BTRFS (with snapshots support)
-- **Driver Support**: Intel, AMD, Nvidia (Proprietary/Open/DKMS), and VM (VirtIO)
-- **Disk Validation**: Warning before erasing disks with existing data
-- **Build Dependencies**: Pre-installed packages for Node.js, Erlang, Elixir, Go, Rust, Ruby
-- **Installation Logs**: Saved to `/tmp/arch-install.log` for debugging
+## Funcionalidades
 
-### 🎨 Desktop Setup (`setup-dms.sh`)
-- **Hyprland**: Modern Wayland tiling compositor
-- **DMS Shell**: Material Design 3 inspired desktop shell
-- **US International Keyboard**: Pre-configured for accents
-- **Nerd Fonts**: JetBrainsMono for terminal icons
-- **Bluetooth**: Optional support (prompted during setup)
-- **Optional Apps**: Choose from Firefox, VS Code, Discord, Spotify, Telegram, Thunar, VLC
-- **Config Backup**: Automatic backup of existing configs
+### 🖥️ Instalação Base (`install-arch.sh`)
+- **Interface Gum TUI**: Interface visual bonita no terminal
+- **Configuração Interativa**: Escolha timezone, idioma, filesystem e driver gráfico
+- **Opções de Filesystem**: ext4 (estável) ou BTRFS (com suporte a snapshots)
+- **Suporte a Drivers**: Intel, AMD, Nvidia (Proprietário/Open/DKMS) e VM (VirtIO)
+- **Validação de Disco**: Aviso antes de apagar discos com dados existentes
+- **Dependências de Build**: Pacotes pré-instalados para Node.js, Erlang, Elixir, Go, Rust, Ruby
+- **Logs de Instalação**: Salvos em `/tmp/arch-install.log` para debug
 
-## How to Use
+### 🎨 Configuração Desktop (`setup-dms.sh`)
+- **Hyprland**: Compositor Wayland moderno com tiling
+- **DMS Shell**: Shell inspirado no Material Design 3
+- **Teclado US International**: Pré-configurado para acentos
+- **Nerd Fonts**: JetBrainsMono para ícones no terminal
+- **Bluetooth**: Suporte opcional (perguntado durante a instalação)
+- **Apps Opcionais**: Escolha entre Firefox, VS Code, Discord, Spotify, Telegram, Thunar, VLC
+- **Backup de Configs**: Backup automático de configurações existentes
 
-### 1. Base Installation
-Run this script inside the Arch Linux live ISO environment.
+## Como Usar
+
+### 1. Instalação Base
+Execute este script dentro do ambiente live ISO do Arch Linux.
 ```bash
 curl -O https://raw.githubusercontent.com/moouro/arch-installer/master/install-arch.sh
 chmod +x install-arch.sh
 ./install-arch.sh
 ```
 
-### 2. Desktop & DMS Setup
-After rebooting into your new system, run this script to install Hyprland and DMS.
+### 2. Configuração Desktop & DMS
+Após reiniciar no novo sistema, execute este script para instalar o Hyprland e DMS.
 ```bash
 curl -O https://raw.githubusercontent.com/moouro/arch-installer/master/setup-dms.sh
 chmod +x setup-dms.sh
 ./setup-dms.sh
 ```
 
-## Shortcuts
-- `SUPER + ENTER`: Open Ghostty terminal
-- `SUPER + Q`: Close active window
+## Atalhos
+- `SUPER + ENTER`: Abrir terminal Ghostty
+- `SUPER + Q`: Fechar janela ativa
 
-## Included Packages
+## Pacotes Incluídos
 
-### Base Installation
+### Instalação Base
 - **Core**: `base`, `linux`, `linux-firmware`, `base-devel`, `networkmanager`
-- **Graphics**: Auto-configured (Mesa, Nvidia, etc.)
-- **Dev Tools**: `openssl`, `zlib`, `readline`, `ncurses`, `libffi`, `libyaml`, `autoconf`, `automake`, `bison`
+- **Gráficos**: Auto-configurados (Mesa, Nvidia, etc.)
+- **Dev Tools**: `clang`, `openssl`, `zlib`, `readline`, `ncurses`, `libffi`, `libyaml`, `autoconf`, `automake`, `bison`
 
-### Desktop Setup
+### Configuração Desktop
 - **Shell**: Dank Material Shell, DMS Greeter (via `greetd`)
-- **Utilities**: `dsearch`, `dgop`, `khal`, `power-profiles-daemon`, `cliphist`, `cava`, `matugen`
-- **Audio**: Pipewire (pulse, alsa, jack) + Wireplumber
-- **Fonts**: JetBrainsMono Nerd Font
+- **Utilitários**: `dsearch`, `dgop`, `khal`, `power-profiles-daemon`, `cliphist`, `cava`, `matugen`
+- **Áudio**: Pipewire (pulse, alsa, jack) + Wireplumber
+- **Fontes**: JetBrainsMono Nerd Font
+
+---
+
+## Créditos
+
+Este projeto é um fork de **[r3dg0d/arch-installer](https://github.com/r3dg0d/arch-installer)**.
+
+Agradeço ao autor original pelo trabalho incrível na criação dos scripts base. As modificações feitas neste fork incluem melhorias de UX, suporte a BTRFS, seleção interativa de timezone/locale, e pacotes adicionais para desenvolvimento.
