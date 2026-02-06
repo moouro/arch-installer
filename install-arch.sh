@@ -37,8 +37,8 @@ HOSTNAME=${HOSTNAME:-arch-vm}
 
 # 3. User setup
 gum style --foreground 99 "Enter username:"
-USERNAME=$(gum input --placeholder "r3dg0d" --value "r3dg0d")
-USERNAME=${USERNAME:-r3dg0d}
+USERNAME=$(gum input --placeholder "moouro" --value "moouro")
+USERNAME=${USERNAME:-moouro}
 
 # 4. Passwords
 gum style --foreground 99 "Enter password for $USERNAME:"

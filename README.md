@@ -19,7 +19,7 @@ Interactive scripts for installing Arch Linux on **Hardware or VMs** and setting
 ### 1. Base Installation
 Run this script inside the Arch Linux live ISO environment.
 ```bash
-curl -O https://raw.githubusercontent.com/r3dg0d/arch-installer/master/install-arch.sh
+curl -O https://raw.githubusercontent.com/moouro/arch-installer/master/install-arch.sh
 chmod +x install-arch.sh
 ./install-arch.sh
 ```
@@ -27,7 +27,7 @@ chmod +x install-arch.sh
 ### 2. Desktop & DMS Setup
 After rebooting into your new system, run this script to install Hyprland and DMS.
 ```bash
-curl -O https://raw.githubusercontent.com/r3dg0d/arch-installer/master/setup-dms.sh
+curl -O https://raw.githubusercontent.com/moouro/arch-installer/master/setup-dms.sh
 chmod +x setup-dms.sh
 ./setup-dms.sh
 ```
